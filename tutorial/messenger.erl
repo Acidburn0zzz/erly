@@ -59,8 +59,12 @@
 
 %%% Change the function below to return the name of the node where the
 %%% messenger server runs
+server_hostname() ->
+    [_Node, Host] = string:tokens( lists:flatten( io_lib:format("~s", [node()])), "@"),
+    Host.
+
 server_node() ->
-    messenger@beastie.
+    list_to_atom( lists:flatten(io_lib:format("~s~s~s", ["messenger", "@", server_hostname() ])) ).
 
 %%% This is the server process for the "messenger"
 %%% the user list has the format [{ClientPid1, Name1},{ClientPid22, Name2},...]

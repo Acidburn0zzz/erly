@@ -4,4 +4,6 @@ project (ceci)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
+find_package(Erlang REQUIRED)
+
 add_subdirectory (src)

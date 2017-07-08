@@ -4,7 +4,7 @@
 int main(int argc, char *argv)
 {
 	int sockfd;
-	char *nodename="xyz@chivas.du.etx.ericsson.se"; /* An example */
+	char *nodename="bilbo@beastie"; /* An example */
 	if ((sockfd = erl_connect(nodename)) < 0)
 	{
 		erl_err_quit("ERROR: erl_connect failed");

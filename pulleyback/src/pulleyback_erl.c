@@ -11,7 +11,7 @@
  */
 
 
-#include <pulleyback.h>
+#include <steamworks/pulleyback.h>
 
 #include <stdlib.h>
 #include <stdio.h>

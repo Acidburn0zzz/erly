@@ -183,6 +183,9 @@ pong() ->
     receive
         finished ->
             io:format("Pong finished~n", []);
+        helo ->
+            io:format("Pong received helo~n", []),
+            pong();
         {ping, Ping_PID} ->
             io:format("Pong received ping~n", []),
             Ping_PID ! pong,

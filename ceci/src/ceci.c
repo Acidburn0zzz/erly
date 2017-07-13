@@ -34,5 +34,14 @@ int main(int argc, char **argv)
 		return 1;  /* NOTREACHED */
 	}
 
+	ETERM *term = erl_mk_atom( "helo" );
+	if (!erl_reg_send(sockfd, "pong", term))
+	{
+		erl_err_sys("ERROR: erl_reg_send failed for %s", servername);
+		return 1;  /* NOTREACHED */
+	}
+
+	erl_free_term(term);
+
 	return 0;
 }

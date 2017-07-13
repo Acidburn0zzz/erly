@@ -1,5 +1,3 @@
-find_package (Steamworks 0.8 REQUIRED)
-
 add_library(pulleyback_erl MODULE
   pulleyback_erl.c
 )

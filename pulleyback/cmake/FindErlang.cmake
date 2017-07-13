@@ -18,8 +18,15 @@ message(STATUS "Looking for Erlang ..")
 
 find_program(Erlang_EXECUTABLE NAMES erlc)
 
-find_path(_ei_dir ei.h)
-find_path(_erl_dir erl_interface.h)
+# Directories where erlang might live; list library directories, include
+# directories, everything.
+set(_erlang_places
+    /usr/local/lib/erlang/usr/include
+    /usr/local/lib/erlang/usr/lib
+    )
+
+find_path(_ei_dir ei.h HINTS ${_erlang_places})
+find_path(_erl_dir erl_interface.h HINTS ${_erlang_places})
 
 if(_ei_dir AND _erl_dir)
     if(_ei_dir STREQUAL _erl_dir)
@@ -32,9 +39,11 @@ endif()
 
 find_library(_ei_lib
     NAMES ei
+    HINTS ${_erlang_places}
 )
 find_library(_erl_lib
     NAMES erl_interface
+    HINTS ${_erlang_places}
 )
 if (_ei_lib AND _erl_lib)
     # These are generally static, and erl_ derpend on ei,

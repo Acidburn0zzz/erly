@@ -1,3 +1,16 @@
+/*
+ *  Copyright 2017, Adriaan de Groot <groot@kde.org>
+ *
+ *  Redistribution and use is allowed according to the terms of the two-clause BSD license.
+ *     https://opensource.org/licenses/BSD-2-Clause
+ *     SPDX short identifier: BSD-2-Clause
+ */
+
+/*
+ * A very, *very* basic Erlang node that sends a single "pong" message
+ * to the pong service (see messenger.erl).
+ */
+
 #include <string.h>
 
 #include "erl_interface.h"

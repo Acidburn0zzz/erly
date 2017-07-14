@@ -195,9 +195,10 @@ void pulleyback_close(void *pbh)
 	free(pbh);
 }
 
-void dump_der(int argc, der_t der)
+void dump_der(ETERM **term, int argc, der_t der)
 {
 	char ibuf[64];
+	*term = NULL;
 
 	if (!der)
 	{
@@ -233,6 +234,8 @@ void dump_der(int argc, der_t der)
 	memcpy(ibuf+offset, der, len);
 	ibuf[offset+len] = 0;
 	write_logger(logger, ibuf);
+
+	*term = erl_mk_estring(der, len);
 }
 
 int pulleyback_add(void *pbh, der_t *forkdata)
@@ -250,8 +253,21 @@ int pulleyback_add(void *pbh, der_t *forkdata)
 	{
 		snprintf(ibuf, sizeof(ibuf), "  .. arg %d  der@%p", i, *p);
 		write_logger(logger, ibuf);
-		dump_der(i, *p);
+		dump_der(&(handle->terms[i]), i, *p);
 		p++;
+	}
+
+	ETERM *msg_inner[2];
+	msg_inner[0] = handle->atom_add;
+	msg_inner[1] = erl_mk_tuple(handle->terms, handle->varc);
+
+	ETERM *msg = erl_mk_tuple(msg_inner, 2);
+	erl_send_reg(handle->sockfd, handle->servicename, msg);
+	erl_free_term(msg);
+	erl_free_term(msg_inner[1]);
+	for (unsigned int i = 0; i<handle->varc; i++)
+	{
+		erl_free_term(handle->terms[i]);
 	}
 
 	return 1;

@@ -187,10 +187,10 @@ pong() ->
             io:format("Pong received helo~n", []),
             pong();
         {add, Data} ->
-            io:format("Add ~w", [Data]),
+            io:format("Add ~w~n", [Data]),
             pong();
         {del, Data} ->
-            io:format("Del ~w", [Data]),
+            io:format("Del ~w~n", [Data]),
             pong();
         {ping, Ping_PID} ->
             io:format("Pong received ping~n", []),

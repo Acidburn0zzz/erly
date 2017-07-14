@@ -1,3 +1,3 @@
 ObjectClass="person", CN=name, SN=surname <- world
 
-name -> erl (tgt="messenger@beastie", message="welcome")
+name -> erl (tgt="messenger@beastie", msg="welcome")

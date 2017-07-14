@@ -23,10 +23,34 @@
 static const char logger[] = "steamworks.pulleyback.erl";
 static int num_instances = 0;
 
+#define NAME_SIZE	(64)
+
 typedef struct {
 	int instancenumber;
 	int varc;
+	ETERM *atom_add;
+	ETERM *atom_del;
+	char nodename[NAME_SIZE];
+	char servicename[NAME_SIZE];
+	int sockfd;
 } handle_t;
+
+static ETERM *make_atom(const char *atom)
+{
+	char ibuf[64];
+
+	ETERM *t = erl_mk_atom( atom );
+	if (t == NULL)
+	{
+		ibuf[0] = 0;
+		snprintf(ibuf, sizeof(ibuf), "Could not create Erlang atom '%s'", atom);
+		ibuf[sizeof(ibuf)-1] = 0;
+		write_logger(logger, ibuf);
+		return NULL;
+	}
+
+	return t;
+}
 
 void *pulleyback_open(int argc, char **argv, int varc)
 {
@@ -37,10 +61,62 @@ void *pulleyback_open(int argc, char **argv, int varc)
 	write_logger(logger, ibuf);
 	// snprintf(ibuf, sizeof(ibuf), " .. %d variables", varc);
 
+	int servername_index = -1;
+	int messagename_index = -1;
 	for (unsigned int i=0; i<argc; i++)
 	{
 		snprintf(ibuf, sizeof(ibuf), "  .. parm %d=%s", i, argv[i]);
 		write_logger(logger, ibuf);
+
+		if (strncmp(argv[i], "tgt=\"", 5) == 0)
+		{
+			servername_index = i;
+		}
+		else if (strncmp(argv[i], "msg=\"", 5) == 0)
+		{
+			messagename_index = i;
+		}
+	}
+
+	if ((servername_index >= 0) && (argv[servername_index][strlen(argv[servername_index])] != '"'))
+	{
+		write_logger(logger, "tgt= parameter is invalid, does not end in \"");
+		servername_index = -1;
+	}
+	if ((messagename_index >= 0) && (argv[messagename_index][strlen(argv[messagename_index])] != '"'))
+	{
+		write_logger(logger, "msg= parameter is invalid, does not end in \"");
+		messagename_index = -1;
+	}
+	if ((servername_index >= 0) && (strlen(argv[servername_index]) >= NAME_SIZE))
+	{
+		write_logger(logger, "tgt= parameter is too long");
+		servername_index = -1;
+	}
+	if ((messagename_index >= 0) && (strlen(argv[messagename_index]) >= NAME_SIZE))
+	{
+		write_logger(logger, "msg= parameter is too long");
+		messagename_index = -1;
+	}
+
+	if (servername_index < 0)
+	{
+		write_logger(logger, "No tgt= parameter given");
+	}
+	if (messagename_index < 0)
+	{
+		write_logger(logger, "No msg= parameter given");
+	}
+	if ((messagename_index < 0) || (servername_index < 0))
+	{
+		return NULL;
+	}
+
+	erl_init(NULL, 0);
+	if (!erl_connect_init(3800 + num_instances, NULL, 0))
+	{
+		write_logger(logger, "Could not initialize Erlang connection");
+		return NULL;
 	}
 
 	handle_t* handle = malloc(sizeof(handle_t));
@@ -51,15 +127,43 @@ void *pulleyback_open(int argc, char **argv, int varc)
 		/* assume malloc() has set errno */
 		return NULL;
 	}
-	else
-	{
-		handle->instancenumber = ++num_instances;
-		handle->varc = varc;
 
-		snprintf(ibuf, sizeof(ibuf), "erl backend handle %p (#%d)", (void *)handle, handle->instancenumber);
-		write_logger(logger, ibuf);
-		return handle;
+	if ((handle->atom_add = make_atom("add")) == NULL)
+	{
+		free(handle);
+		return NULL;
 	}
+
+	if ((handle->atom_del = make_atom("del")) == NULL)
+	{
+		erl_free_term(handle->atom_add);
+		free(handle);
+		return NULL;
+	}
+
+	int l;
+	l = strlen(argv[servername_index]);
+	strncpy(handle->nodename, argv[servername_index]+5, l-6);
+	l = strlen(argv[messagename_index]);
+	strncpy(handle->servicename, argv[messagename_index]+5, l-6);
+
+	if ((handle->sockfd = erl_connect(handle->nodename)) < 0)
+	{
+		snprintf(ibuf, sizeof(ibuf), "Could not connect to '%s'", handle->nodename);
+		write_logger(logger, ibuf);
+
+		erl_free_term(handle->atom_add);
+		erl_free_term(handle->atom_del);
+		free(handle);
+		return NULL;
+	}
+
+	handle->instancenumber = ++num_instances;
+	handle->varc = varc;
+
+	snprintf(ibuf, sizeof(ibuf), "erl backend handle %p (#%d)", (void *)handle, handle->instancenumber);
+	write_logger(logger, ibuf);
+	return handle;
 }
 
 void pulleyback_close(void *pbh)
@@ -71,6 +175,10 @@ void pulleyback_close(void *pbh)
 	write_logger(logger, ibuf);
 	snprintf(ibuf, sizeof(ibuf), " .. instance %d", handle->instancenumber);
 	write_logger(logger, ibuf);
+
+	erl_close_connection(handle->sockfd);
+	erl_free_term(handle->atom_add);
+	erl_free_term(handle->atom_del);
 
 	free(pbh);
 }

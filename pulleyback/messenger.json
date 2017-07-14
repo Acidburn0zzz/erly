@@ -1,0 +1,6 @@
+{ 
+"verb": "script",
+"filename": "messenger.ply",
+"base": "dc=example,dc=com",
+"autofollow": true
+}

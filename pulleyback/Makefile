@@ -55,3 +55,6 @@ clean:
 package: compile
 	( cd build && $(MAKE) package )
 
+pulleytest:
+	sed 's+messenger.ply+'`pwd -P`'/messenger.ply+' messenger.json | \
+	SERVER_NAME=bogus.bionicmutton.org CONTENT_LENGTH=18 cgi-fcgi -connect /tmp/steamworks/pulley $(PREFIX)/bin/pulley

@@ -17,6 +17,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <erl_interface.h>
+#include <ei.h>
+
 static const char logger[] = "steamworks.pulleyback.erl";
 static int num_instances = 0;
 

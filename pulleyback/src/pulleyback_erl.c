@@ -245,15 +245,9 @@ void dump_der(ETERM **term, int argc, der_t der)
 	*term = erl_mk_estring((char *)der, len);
 }
 
-int pulleyback_add(void *pbh, der_t *forkdata)
+static void send_forkdata(handle_t *handle, ETERM *atom, der_t *forkdata)
 {
 	char ibuf[64];
-	handle_t* handle = pbh;
-
-	snprintf(ibuf, sizeof(ibuf), "erl backend add %p", (void *)handle);
-	write_logger(logger, ibuf);
-	snprintf(ibuf, sizeof(ibuf), "  .. instance #%d add data @%p", handle->instancenumber, (void *)forkdata);
-	write_logger(logger, ibuf);
 
 	der_t* p = forkdata;
 	for (unsigned int i = 0; i < handle->varc; i++)
@@ -265,7 +259,7 @@ int pulleyback_add(void *pbh, der_t *forkdata)
 	}
 
 	ETERM *msg_inner[2];
-	msg_inner[0] = handle->atom_add;
+	msg_inner[0] = atom;
 	msg_inner[1] = erl_mk_tuple(handle->terms, handle->varc);
 
 	ETERM *msg = erl_mk_tuple(msg_inner, 2);
@@ -276,7 +270,19 @@ int pulleyback_add(void *pbh, der_t *forkdata)
 	{
 		erl_free_term(handle->terms[i]);
 	}
+}
 
+int pulleyback_add(void *pbh, der_t *forkdata)
+{
+	char ibuf[64];
+	handle_t* handle = pbh;
+
+	snprintf(ibuf, sizeof(ibuf), "erl backend add %p", (void *)handle);
+	write_logger(logger, ibuf);
+	snprintf(ibuf, sizeof(ibuf), "  .. instance #%d add data @%p", handle->instancenumber, (void *)forkdata);
+	write_logger(logger, ibuf);
+
+	send_forkdata(handle, handle->atom_add, forkdata);
 	return 1;
 }
 
@@ -289,6 +295,8 @@ int pulleyback_del(void *pbh, der_t *forkdata)
 	write_logger(logger, ibuf);
 	snprintf(ibuf, sizeof(ibuf), "  .. instance #%d del data @%p", handle->instancenumber, (void *)forkdata);
 	write_logger(logger, ibuf);
+
+	send_forkdata(handle, handle->atom_del, forkdata);
 
 	return 1;
 }

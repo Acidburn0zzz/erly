@@ -33,6 +33,7 @@ typedef struct {
 	char nodename[NAME_SIZE];
 	char servicename[NAME_SIZE];
 	int sockfd;
+	ETERM **terms;
 } handle_t;
 
 static ETERM *make_atom(const char *atom)
@@ -128,8 +129,17 @@ void *pulleyback_open(int argc, char **argv, int varc)
 		return NULL;
 	}
 
+	handle->terms = calloc(varc + 2, sizeof(ETERM *));
+	if (handle->terms == NULL)
+	{
+		write_logger(logger, "Could not allocate ETERM space");
+		free(handle);
+		return NULL;
+	}
+
 	if ((handle->atom_add = make_atom("add")) == NULL)
 	{
+		free(handle->terms);
 		free(handle);
 		return NULL;
 	}
@@ -137,6 +147,7 @@ void *pulleyback_open(int argc, char **argv, int varc)
 	if ((handle->atom_del = make_atom("del")) == NULL)
 	{
 		erl_free_term(handle->atom_add);
+		free(handle->terms);
 		free(handle);
 		return NULL;
 	}
@@ -154,6 +165,7 @@ void *pulleyback_open(int argc, char **argv, int varc)
 
 		erl_free_term(handle->atom_add);
 		erl_free_term(handle->atom_del);
+		free(handle->terms);
 		free(handle);
 		return NULL;
 	}
@@ -179,7 +191,7 @@ void pulleyback_close(void *pbh)
 	erl_close_connection(handle->sockfd);
 	erl_free_term(handle->atom_add);
 	erl_free_term(handle->atom_del);
-
+	free(handle>terms);
 	free(pbh);
 }
 

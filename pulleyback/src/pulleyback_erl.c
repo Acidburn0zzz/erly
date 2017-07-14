@@ -173,6 +173,10 @@ void *pulleyback_open(int argc, char **argv, int varc)
 	handle->instancenumber = ++num_instances;
 	handle->varc = varc;
 
+	ETERM *t = erl_mk_atom("helo");
+	erl_reg_send(handle->sockfd, handle->servicename, t);
+	erl_free_term(t);
+
 	snprintf(ibuf, sizeof(ibuf), "erl backend handle %p (#%d)", (void *)handle, handle->instancenumber);
 	write_logger(logger, ibuf);
 	return handle;
@@ -191,7 +195,7 @@ void pulleyback_close(void *pbh)
 	erl_close_connection(handle->sockfd);
 	erl_free_term(handle->atom_add);
 	erl_free_term(handle->atom_del);
-	free(handle>terms);
+	free(handle->terms);
 	free(pbh);
 }
 
@@ -235,7 +239,7 @@ void dump_der(ETERM **term, int argc, der_t der)
 	ibuf[offset+len] = 0;
 	write_logger(logger, ibuf);
 
-	*term = erl_mk_estring(der, len);
+	*term = erl_mk_estring((char *)der, len);
 }
 
 int pulleyback_add(void *pbh, der_t *forkdata)
@@ -262,7 +266,7 @@ int pulleyback_add(void *pbh, der_t *forkdata)
 	msg_inner[1] = erl_mk_tuple(handle->terms, handle->varc);
 
 	ETERM *msg = erl_mk_tuple(msg_inner, 2);
-	erl_send_reg(handle->sockfd, handle->servicename, msg);
+	erl_reg_send(handle->sockfd, handle->servicename, msg);
 	erl_free_term(msg);
 	erl_free_term(msg_inner[1]);
 	for (unsigned int i = 0; i<handle->varc; i++)

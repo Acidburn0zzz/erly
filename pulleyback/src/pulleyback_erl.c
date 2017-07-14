@@ -114,7 +114,7 @@ void *pulleyback_open(int argc, char **argv, int varc)
 	}
 
 	erl_init(NULL, 0);
-	if (!erl_connect_init(3800 + num_instances, NULL, 0))
+	if (!erl_connect_init(3801 + num_instances, NULL, 0))
 	{
 		write_logger(logger, "Could not initialize Erlang connection");
 		return NULL;
@@ -154,13 +154,16 @@ void *pulleyback_open(int argc, char **argv, int varc)
 
 	int l;
 	l = strlen(argv[servername_index]);
+	memset(handle->nodename, 0, NAME_SIZE);
 	strncpy(handle->nodename, argv[servername_index]+5, l-6);
 	l = strlen(argv[messagename_index]);
+	memset(handle->servicename, 0, NAME_SIZE);
 	strncpy(handle->servicename, argv[messagename_index]+5, l-6);
 
 	if ((handle->sockfd = erl_connect(handle->nodename)) < 0)
 	{
 		snprintf(ibuf, sizeof(ibuf), "Could not connect to '%s'", handle->nodename);
+		ibuf[sizeof(ibuf)-1]=0;
 		write_logger(logger, ibuf);
 
 		erl_free_term(handle->atom_add);

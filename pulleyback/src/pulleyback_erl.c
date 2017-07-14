@@ -78,12 +78,12 @@ void *pulleyback_open(int argc, char **argv, int varc)
 		}
 	}
 
-	if ((servername_index >= 0) && (argv[servername_index][strlen(argv[servername_index])] != '"'))
+	if ((servername_index >= 0) && (argv[servername_index][strlen(argv[servername_index])-1] != '"'))
 	{
 		write_logger(logger, "tgt= parameter is invalid, does not end in \"");
 		servername_index = -1;
 	}
-	if ((messagename_index >= 0) && (argv[messagename_index][strlen(argv[messagename_index])] != '"'))
+	if ((messagename_index >= 0) && (argv[messagename_index][strlen(argv[messagename_index])-1] != '"'))
 	{
 		write_logger(logger, "msg= parameter is invalid, does not end in \"");
 		messagename_index = -1;
